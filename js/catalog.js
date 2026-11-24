@@ -19,6 +19,11 @@ window.WMK_TANKS = [
       "view": 360,
       "accuracy": 0.31,
       "turn": 62
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 20,
+      "depressionMinDeg": -10,
+      "pitchSpeedDeg": 12
     }
   },
   {
@@ -41,6 +46,11 @@ window.WMK_TANKS = [
       "view": 375,
       "accuracy": 0.3,
       "turn": 64
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 20,
+      "depressionMinDeg": -10,
+      "pitchSpeedDeg": 12
     }
   },
   {
@@ -63,6 +73,11 @@ window.WMK_TANKS = [
       "view": 395,
       "accuracy": 0.29,
       "turn": 65
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 20,
+      "depressionMinDeg": -10,
+      "pitchSpeedDeg": 12
     }
   },
   {
@@ -85,6 +100,11 @@ window.WMK_TANKS = [
       "view": 415,
       "accuracy": 0.28,
       "turn": 67
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 20,
+      "depressionMinDeg": -10,
+      "pitchSpeedDeg": 12
     }
   },
   {
@@ -107,6 +127,11 @@ window.WMK_TANKS = [
       "view": 340,
       "accuracy": 0.35,
       "turn": 50
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 18,
+      "depressionMinDeg": -8,
+      "pitchSpeedDeg": 10
     }
   },
   {
@@ -129,6 +154,11 @@ window.WMK_TANKS = [
       "view": 360,
       "accuracy": 0.33,
       "turn": 49
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 18,
+      "depressionMinDeg": -8,
+      "pitchSpeedDeg": 10
     }
   },
   {
@@ -151,6 +181,11 @@ window.WMK_TANKS = [
       "view": 382,
       "accuracy": 0.31,
       "turn": 47
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 18,
+      "depressionMinDeg": -8,
+      "pitchSpeedDeg": 10
     }
   },
   {
@@ -173,6 +208,11 @@ window.WMK_TANKS = [
       "view": 405,
       "accuracy": 0.3,
       "turn": 48
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 18,
+      "depressionMinDeg": -8,
+      "pitchSpeedDeg": 10
     }
   },
   {
@@ -195,6 +235,11 @@ window.WMK_TANKS = [
       "view": 315,
       "accuracy": 0.39,
       "turn": 31
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 15,
+      "depressionMinDeg": -6,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -217,6 +262,11 @@ window.WMK_TANKS = [
       "view": 334,
       "accuracy": 0.38,
       "turn": 29
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 15,
+      "depressionMinDeg": -6,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -239,6 +289,11 @@ window.WMK_TANKS = [
       "view": 350,
       "accuracy": 0.36,
       "turn": 27
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 15,
+      "depressionMinDeg": -6,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -261,6 +316,11 @@ window.WMK_TANKS = [
       "view": 370,
       "accuracy": 0.35,
       "turn": 26
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 15,
+      "depressionMinDeg": -6,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -283,6 +343,11 @@ window.WMK_TANKS = [
       "view": 325,
       "accuracy": 0.29,
       "turn": 36
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 16,
+      "depressionMinDeg": -7,
+      "pitchSpeedDeg": 9
     }
   },
   {
@@ -305,6 +370,11 @@ window.WMK_TANKS = [
       "view": 347,
       "accuracy": 0.27,
       "turn": 33
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 16,
+      "depressionMinDeg": -7,
+      "pitchSpeedDeg": 9
     }
   },
   {
@@ -327,6 +397,11 @@ window.WMK_TANKS = [
       "view": 367,
       "accuracy": 0.25,
       "turn": 31
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 16,
+      "depressionMinDeg": -7,
+      "pitchSpeedDeg": 9
     }
   },
   {
@@ -349,6 +424,11 @@ window.WMK_TANKS = [
       "view": 390,
       "accuracy": 0.23,
       "turn": 30
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 16,
+      "depressionMinDeg": -7,
+      "pitchSpeedDeg": 9
     }
   },
   {
@@ -371,6 +451,11 @@ window.WMK_TANKS = [
       "view": 305,
       "accuracy": 0.52,
       "turn": 23
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 30,
+      "depressionMinDeg": -4,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -393,6 +478,11 @@ window.WMK_TANKS = [
       "view": 324,
       "accuracy": 0.49,
       "turn": 21
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 30,
+      "depressionMinDeg": -4,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -415,6 +505,11 @@ window.WMK_TANKS = [
       "view": 345,
       "accuracy": 0.46,
       "turn": 19
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 30,
+      "depressionMinDeg": -4,
+      "pitchSpeedDeg": 8
     }
   },
   {
@@ -437,6 +532,11 @@ window.WMK_TANKS = [
       "view": 365,
       "accuracy": 0.43,
       "turn": 17
+    },
+    "gunLimits": {
+      "elevationMaxDeg": 30,
+      "depressionMinDeg": -4,
+      "pitchSpeedDeg": 8
     }
   }
 ];

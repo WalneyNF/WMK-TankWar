@@ -750,7 +750,7 @@
     }
 
     function drawWorldTank(ctx, entity, tankClass, color, isPlayer) {
-      const base = tankSize(tankClass); const length=base.length*1.42,width=base.width*1.42;
+      const base = tankSize(tankClass); const length=base.length*2.84,width=base.width*2.84;
 
       ctx.save();
       ctx.translate(entity.x, entity.y);
@@ -800,12 +800,13 @@
       ctx.restore();
 
       if (!isPlayer) {
-        const barW = 42;
+        if(entity.nickname){ctx.font="bold 13px Segoe UI";ctx.textAlign="center";ctx.fillStyle=entity.team==="blue"?"#c2e5ff":"#ffd1c9";ctx.fillText(entity.nickname+" · "+(entity.vehicleName||""),entity.x,entity.y-105)}
+        const barW = 86;
         const ratio = Math.max(0, entity.hp / entity.maxHp);
         ctx.fillStyle = "rgba(0,0,0,.6)";
-        ctx.fillRect(entity.x - barW / 2, entity.y - 48, barW, 5);
+        ctx.fillRect(entity.x - barW / 2, entity.y - 94, barW, 5);
         ctx.fillStyle = entity.team==="blue" ? "#58aaff" : "#e76b60";
-        ctx.fillRect(entity.x - barW / 2, entity.y - 48, barW * ratio, 5);
+        ctx.fillRect(entity.x - barW / 2, entity.y - 94, barW * ratio, 5);
       }
     }
 
@@ -1220,7 +1221,7 @@
         const nx = p.x + Math.cos(p.angle) * distance;
         const ny = p.y + Math.sin(p.angle) * distance;
 
-        if (!isBlocked(nx, ny, 34) && ![...game.enemies,...(game.allies||[])].some(u=>u.alive&&Math.hypot(u.x-nx,u.y-ny)<64)) {
+        if (!isBlocked(nx, ny, 64) && ![...game.enemies,...(game.allies||[])].some(u=>u.alive&&Math.hypot(u.x-nx,u.y-ny)<128)) {
           p.x = nx;
           p.y = ny;
         }
@@ -1244,13 +1245,13 @@
           const choices=[angle,angle+.8,angle-.8,angle+1.5,angle-1.5];
           for(const heading of choices){
             const nx=bot.x+Math.cos(heading)*profile.speed*dt,ny=bot.y+Math.sin(heading)*profile.speed*dt;
-            if(!isBlocked(nx,ny,34)&&![...blue,...red].some(u=>u!==bot&&Math.hypot(u.x-nx,u.y-ny)<64)){bot.x=nx;bot.y=ny;bot.angle=heading;break}
+            if(!isBlocked(nx,ny,64)&&![...blue,...red].some(u=>u!==bot&&Math.hypot(u.x-nx,u.y-ny)<128)){bot.x=nx;bot.y=ny;bot.angle=heading;break}
           }
         }
         bot.cooldown-=dt;
         if(dist<profile.range&&bot.cooldown<=0&&clearLine(bot,target)){
           const angle2=angle+(Math.random()-.5)*profile.spread;
-          game.shots.push({x:bot.x+Math.cos(angle2)*35,y:bot.y+Math.sin(angle2)*35,vx:Math.cos(angle2)*550,vy:Math.sin(angle2)*550,owner:bot.team==="blue"?"ally":"enemy",damage:bot.damage,pen:bot.pen,life:2.8});
+          game.shots.push({x:bot.x+Math.cos(angle2)*72,y:bot.y+Math.sin(angle2)*72,vx:Math.cos(angle2)*550,vy:Math.sin(angle2)*550,owner:bot.team==="blue"?"ally":"enemy",damage:bot.damage,pen:bot.pen,life:2.8});
           bot.cooldown=profile.reload+Math.random()*1.5;
           if(dist<450)WMKAudio.play("bot");
         }
@@ -1263,7 +1264,7 @@
         for(let j=1;j<=n&&shell.life>0;j++){
           const x=ox+(shell.x-ox)*j/n,y=oy+(shell.y-oy)*j/n;
           if(isBlocked(x,y,1)){shell.life=0;addEffect(x,y,"#c7b897");break}
-          const target=targets.find(u=>u.hp>0&&Math.hypot(u.x-x,u.y-y)<34);
+          const target=targets.find(u=>u.hp>0&&Math.hypot(u.x-x,u.y-y)<65);
           if(target){if(target===p){damagePlayer({...shell,x,y});p.hp=Math.max(0,p.hp)}else if(shell.owner==="player"){damageEnemy(target,shell.damage,shell.pen)}else{botDamage(target,shell)}shell.life=0;}
         }
         if(shell.life<=0)game.shots.splice(i,1);
@@ -1326,7 +1327,8 @@
       }
 
       const stats = effectiveStats(tank);
-      const selectedMap = training ? null : WMKMaps.validate(config.map || WMKMaps.presets.large);
+      const selectedMap = training ? null : WMKMaps.expand(config.map || WMKMaps.presets.large,config.teamSize||5);
+      const match=config.teamSize?(config.match||WMKMatchmaker.create(TANKS,tank,config.teamSize)):null;
       WORLD_W = selectedMap ? selectedMap.width : 2200; WORLD_H = selectedMap ? selectedMap.height : 1500;
       const centerX = WORLD_W / 2;
       const centerY = WORLD_H / 2;
@@ -1361,7 +1363,7 @@
 
       const rect = $("battleCanvas").getBoundingClientRect();
       game = {
-        training, map:selectedMap, teamSize:config.teamSize||0, difficulty:botProfiles()[config.difficulty]?config.difficulty:'easy', allyDifficulty:botProfiles()[config.allyDifficulty]?config.allyDifficulty:'normal', zoom:0.72,
+        training, map:selectedMap, match, teamSize:config.teamSize||0, difficulty:botProfiles()[config.difficulty]?config.difficulty:'easy', allyDifficulty:botProfiles()[config.allyDifficulty]?config.allyDifficulty:'normal', zoom:0.72,
         tank,
         stats,
         mode: tank.class === "spg" ? "arty" : "arcade",
@@ -1387,8 +1389,8 @@
 
       if(selectedMap){
         game.player.x=selectedMap.blue[0].x;game.player.y=selectedMap.blue[0].y;game.player.angle=-Math.PI/2;game.player.turretAngle=-Math.PI/2;
-        game.enemies=selectedMap.red.slice(0,game.teamSize||5).map((p,i)=>makeBot(p,i,"red",stats,tank.tier));
-        game.allies=game.teamSize?selectedMap.blue.slice(1,game.teamSize).map((p,i)=>makeBot(p,i,"blue",stats,tank.tier)):[];
+        game.enemies=selectedMap.red.slice(0,game.teamSize||5).map((p,i)=>makeBot(p,i,"red",stats,tank.tier,match?.red[i]));
+        game.allies=game.teamSize?selectedMap.blue.slice(1,game.teamSize).map((p,i)=>makeBot(p,i,"blue",stats,tank.tier,match?.blue[i+1])):[];
       }else game.allies=[];
       game.player.team="blue";
       pressedKeys = {};
@@ -1536,7 +1538,7 @@
 const key='wmk-tankwar-layout-v2'; const work={garage:document.querySelector('.garage-layout'),battle:document.querySelector('.battle-shell')};
 const panels={garage:{},battle:{}}; let z=10; let saved={}; try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}; let layouts=saved.layouts||{}; let active=saved.active||'Padrão';
 const presets={garage:{fleet:[0,.76,1,.24],viewport:[0,0,.74,.60],summary:[0,.60,.74,.16],stats:[.74,0,.26,.39],modules:[.74,.39,.26,.37]},battle:{vehicle:[0,0,.22,.13],modes:[.34,0,.32,.13],objective:[.78,0,.22,.18],hp:[0,.85,.23,.15],reload:[.24,.85,.23,.15],help:[.68,.80,.32,.20]}};
-const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.4</span>`;document.querySelector('.topbar').after(toolbar);
+const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.5</span>`;document.querySelector('.topbar').after(toolbar);
 function persist(){try{localStorage.setItem(key,JSON.stringify({active,layouts,current:collect()}))}catch{}}
 function repaint(){if(currentPage==='garage')drawHangar();else if(currentPage==='battle'&&game)renderBattle()}
 function rect(p,r){p.style.left=(r[0]*100)+'%';p.style.top=(r[1]*100)+'%';p.style.width=(r[2]*100)+'%';p.style.height=(r[3]*100)+'%'}
@@ -1591,16 +1593,27 @@ new ResizeObserver(()=>{if(currentPage==='garage'&&!panels.garage.viewport.hidde
 
   
 function botProfiles(){return {"recruit":{"label":"Recruta","hp":0.45,"damage":0.22,"armor":0.3,"pen":0.55,"speed":42,"range":380,"spread":0.65,"reload":9,"delay":5},"easy":{"label":"Fácil","hp":0.6,"damage":0.35,"armor":0.45,"pen":0.75,"speed":54,"range":520,"spread":0.4,"reload":7,"delay":3},"normal":{"label":"Normal","hp":0.78,"damage":0.65,"armor":0.7,"pen":1,"speed":70,"range":750,"spread":0.17,"reload":4.5,"delay":2},"hard":{"label":"Difícil","hp":1,"damage":0.85,"armor":0.9,"pen":1.1,"speed":80,"range":900,"spread":0.09,"reload":3,"delay":1},"elite":{"label":"Elite","hp":1.2,"damage":1,"armor":1,"pen":1.2,"speed":90,"range":1000,"spread":0.05,"reload":2.5,"delay":1}}}
-function makeBot(p,i,team,stats,tier){const profile=botProfiles()[team==="blue"?game.allyDifficulty:game.difficulty]||botProfiles().easy;const hp=Math.max(70,Math.round(stats.hp*profile.hp));return {x:p.x,y:p.y,team,profile,angle:team==="blue"?-Math.PI/2:Math.PI/2,turretAngle:0,hp,maxHp:hp,armor:Math.max(5,Math.round(stats.armor*profile.armor)),damage:Math.max(4,Math.round(stats.damage*profile.damage)),pen:Math.round(stats.pen*profile.pen),class:["medium","light","heavy","td","medium"][i%5],alive:true,cooldown:profile.delay+i*.5}}
+function makeBot(p,i,team,stats,tier,entry){const vehicle=entry?getTank(entry.tankId):null;if(vehicle){stats=vehicle.stats;tier=vehicle.tier}const profile=botProfiles()[team==="blue"?game.allyDifficulty:game.difficulty]||botProfiles().easy;const hp=Math.max(70,Math.round(stats.hp*profile.hp));return {x:p.x,y:p.y,team,profile,nickname:entry?.name,vehicleName:vehicle?.name,tier,angle:team==="blue"?-Math.PI/2:Math.PI/2,turretAngle:0,hp,maxHp:hp,armor:Math.max(5,Math.round(stats.armor*profile.armor)),damage:Math.max(4,Math.round(stats.damage*profile.damage)),pen:Math.round(stats.pen*profile.pen),class:vehicle?.class||["medium","light","heavy","td","medium"][i%5],alive:true,cooldown:profile.delay+i*.5}}
 function clearLine(a,b){let n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/24);for(let i=1;i<n;i++)if(isBlocked(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,1))return false;return true}
 function botDamage(u,s){if(s.pen>=u.armor){u.hp=Math.max(0,u.hp-Math.round(s.damage));addEffect(u.x,u.y,"#f1b46b","-"+Math.round(s.damage));if(!u.hp){u.alive=false;addEffect(u.x,u.y,"#f0ad68","DESTRUÍDO")}}}
 function drawMinimap(){const c=$("wmkMinimap");if(!c||!game)return;const ctx=c.getContext("2d"),w=c.width,h=c.height,sc=Math.min(w/WORLD_W,h/WORLD_H),ox=(w-WORLD_W*sc)/2,oy=(h-WORLD_H*sc)/2;ctx.fillStyle="#101610";ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(ox,oy);ctx.scale(sc,sc);ctx.fillStyle="#59634d";ctx.fillRect(0,0,WORLD_W,WORLD_H);ctx.fillStyle="#343d30";for(const o of game.training?trainingObstacles:game.map?.obstacles||obstacles){if(o.kind==="building")ctx.fillRect(o.x,o.y,o.w,o.h);else{ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill()}}const dot=(u,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(u.x,u.y,Math.max(32,3/sc),0,7);ctx.fill()};for(const u of game.enemies)if(u.alive)dot(u,"#ff665b");for(const u of game.allies||[])if(u.alive)dot(u,"#58aaff");if(game.player.hp>0)dot(game.player,"#b9e9ff");const r=$("battleCanvas").getBoundingClientRect(),cam=cameraFor(r.width,r.height);ctx.strokeStyle="#e7e8c7";ctx.lineWidth=1/sc;ctx.strokeRect(cam.x-r.width/2/cam.scale,cam.y-r.height/2/cam.scale,r.width/cam.scale,r.height/cam.scale);ctx.restore()}
 (()=>{
-const bar=document.querySelector(".wmk-command"),b=document.createElement("button");b.textContent="3×3 / 5×5";bar.append(b);const edit=document.createElement("button");edit.textContent="EDITOR DE MAPAS";bar.append(edit);const sound=document.createElement("button");sound.textContent="SOM: ON";bar.append(sound);sound.onclick=()=>{WMKAudio.enabled=!WMKAudio.enabled;sound.textContent="SOM: "+(WMKAudio.enabled?"ON":"OFF");WMKAudio.resume()};
+const bar=document.querySelector(".wmk-command"),b=document.createElement("button");b.textContent="BATALHAS COM BOTS";bar.append(b);const edit=document.createElement("button");edit.textContent="EDITOR DE MAPAS";bar.append(edit);const sound=document.createElement("button");sound.textContent="SOM: ON";bar.append(sound);sound.onclick=()=>{WMKAudio.enabled=!WMKAudio.enabled;sound.textContent="SOM: "+(WMKAudio.enabled?"ON":"OFF");WMKAudio.resume()};
 document.addEventListener("pointerdown",()=>WMKAudio.resume(),{passive:true});
-const modal=document.createElement("dialog");modal.className="wmk-debug";modal.innerHTML='<form method="dialog"><header><strong>TREINO EM EQUIPE</strong><button value="close">×</button></header></form><p>Você integra a equipe azul. Bots aliados e inimigos. Sem recompensas.</p><label>Mapa <select id="wmkTeamMap"><option value="default">Vale WMK · 3600 × 2400</option><option value="large" selected>Planícies WMK · 6000 × 4000</option><option value="huge">Fronteira WMK · 8000 × 6000</option><option value="custom">Mapa do editor</option></select></label><label>Inimigos <select id="wmkDifficulty"><option value="recruit">Recruta</option><option value="easy" selected>Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><label>Aliados <select id="wmkAllyDifficulty"><option value="recruit">Recruta</option><option value="easy">Fácil</option><option value="normal" selected>Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><p>Recruta e Fácil: inimigos menos resistentes, lentos e imprecisos. Aliados podem ter nível diferente.</p><div class="dbg-actions"><button id="wmk3">3 × 3</button><button id="wmk5">5 × 5</button></div>';document.body.append(modal);
-b.onclick=()=>{pressedKeys={};modal.showModal()};const launch=n=>{const map=$("wmkTeamMap").value==="custom"?WMKMaps.load():WMKMaps.presets[$("wmkTeamMap").value];if(!map)return notify("Salve um mapa no editor primeiro.");if(game?.active&&!confirm("Encerrar sessão atual?"))return;modal.close();startBattle({teamSize:n,map,difficulty:$("wmkDifficulty").value,allyDifficulty:$("wmkAllyDifficulty").value})};$("wmk3").onclick=()=>launch(3);$("wmk5").onclick=()=>launch(5);
+const modal=document.createElement("dialog");modal.className="wmk-debug";modal.innerHTML='<form method="dialog"><header><strong>TREINO EM EQUIPE</strong><button value="close">×</button></header></form><p>Você integra a equipe azul. Bots aliados e inimigos. Sem recompensas.</p><label>Mapa <select id="wmkTeamMap"><option value="default">Vale WMK · 3600 × 2400</option><option value="large" selected>Planícies WMK · 6000 × 4000</option><option value="huge">Fronteira WMK · 8000 × 6000</option><option value="custom">Mapa do editor</option></select></label><label>Inimigos <select id="wmkDifficulty"><option value="recruit">Recruta</option><option value="easy" selected>Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><label>Aliados <select id="wmkAllyDifficulty"><option value="recruit">Recruta</option><option value="easy">Fácil</option><option value="normal" selected>Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><p>Recruta e Fácil: inimigos menos resistentes, lentos e imprecisos. Aliados podem ter nível diferente.</p><div class="dbg-actions"><button id="wmk3">3 × 3</button><button id="wmk5">5 × 5</button><button id="wmk10">10 × 10</button><button id="wmk15">15 × 15</button></div>';document.body.append(modal);
+const queue=document.createElement("dialog");queue.className="wmk-debug wmk-match-queue";queue.innerHTML='<header><strong>WMK MATCHMAKER · FILA LOCAL SIMULADA</strong></header><p id="mmStatus"></p><progress id="mmProgress" max="100" value="0"></progress><div id="mmRoster"></div><div class="dbg-actions"><button id="mmCancel">Cancelar</button><button id="mmEnter" disabled>Entrar na batalha</button></div>';document.body.append(queue);
+let ticket=0,timer=null,pending=null;const cancel=()=>{ticket++;clearInterval(timer);pending=null;if(queue.open)queue.close();pressedKeys={}};$("mmCancel").onclick=cancel;queue.addEventListener("cancel",cancel);
+function roster(match){const root=$("mmRoster");root.replaceChildren();const heading=document.createElement("p");heading.textContent="Soma de tiers: "+match.blueScore+" × "+match.redScore+" · diferença "+match.tierDelta;root.append(heading);const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA";col.append(title);for(const entry of match[team]){const row=document.createElement("div");row.className="wmk-roster-row";row.textContent=entry.name+" · "+getTank(entry.tankId).name+" · "+ROMAN[entry.tier]+(entry.bot?" [BOT]":" [JOGADOR]");col.append(row)}cols.append(col)}root.append(cols)}
+b.onclick=()=>{pressedKeys={};modal.showModal()};
+const launch=n=>{const tank=getTank(state.selectedTank);if(!tank||!isOwned(tank.id))return notify("Selecione um blindado da garagem.");let map=$("wmkTeamMap").value==="custom"?WMKMaps.load():WMKMaps.presets[$("wmkTeamMap").value];if(!map)return notify("Salve um mapa no editor primeiro.");try{map=WMKMaps.expand(map,n)}catch(e){return notify(e.message)}if(game?.active&&!confirm("Encerrar sessão atual?"))return;const match=WMKMatchmaker.create(TANKS,tank,n);if(!WMKMatchmaker.audit(match))return notify("Falha no balanceamento.");modal.close();pending={teamSize:n,map,match,difficulty:$("wmkDifficulty").value,allyDifficulty:$("wmkAllyDifficulty").value};const id=++ticket;let step=0;$("mmRoster").replaceChildren();$("mmEnter").disabled=true;$("mmProgress").value=0;$("mmStatus").textContent="Buscando oponentes simulados… 0 / "+(n*2);queue.showModal();timer=setInterval(()=>{if(id!==ticket)return;step++;$("mmProgress").value=Math.min(100,step*25);$("mmStatus").textContent=step<4?"Reunindo participantes simulados… "+Math.floor(n*2*step/4)+" / "+n*2:"Partida encontrada · "+map.name+" · "+n+" × "+n;if(step>=4){clearInterval(timer);roster(match);$("mmEnter").disabled=false}},650)};
+$("mmEnter").onclick=()=>{if(!pending)return;const config=pending;cancel();startBattle(config)};
+for(const n of [3,5,10,15])$("wmk"+n).onclick=()=>launch(n);
+
+const rosterButton=document.createElement("button");rosterButton.textContent="EQUIPES (TAB)";bar.append(rosterButton);
+const scoreboard=document.createElement("dialog");scoreboard.className="wmk-debug wmk-match-queue";scoreboard.innerHTML='<form method="dialog"><header><strong>ESCALAÇÃO DA PARTIDA</strong><button value="close">×</button></header></form><div id="mmLive"></div>';document.body.append(scoreboard);
+function live(){if(!game?.match)return notify("Entre em uma partida com bots.");const root=$("mmLive");root.replaceChildren();const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA";col.append(title);game.match[team].forEach((entry,i)=>{const u=team==="blue"?(i===0?game.player:game.allies[i-1]):game.enemies[i];const row=document.createElement("div");row.className="wmk-roster-row"+(u?.hp>0?"":" eliminated");row.textContent=entry.name+" · "+getTank(entry.tankId).name+" · "+ROMAN[entry.tier]+" · "+(u?.hp>0?Math.ceil(u.hp)+" HP":"DESTRUÍDO");col.append(row)});cols.append(col)}root.append(cols);pressedKeys={};scoreboard.showModal()}
+rosterButton.onclick=live;window.addEventListener("keydown",e=>{if(e.key==="Tab"&&currentPage==="battle"&&game?.match&&!modal.open&&!queue.open&&!scoreboard.open&&!document.querySelector("dialog[open]")){e.preventDefault();live()}});
 edit.onclick=()=>window.open("editor-mapas.html","_blank","noopener");
 $("battleCanvas").addEventListener("wheel",e=>{if(!game||game.mode!=="arcade")return;e.preventDefault();game.zoom=Math.max(.45,Math.min(1.35,game.zoom*(e.deltaY>0?.9:1.1)))},{passive:false});
-const tick=updateGame;updateGame=function(dt){if(modal.open)return;tick(dt)};const shot=firePlayer;firePlayer=function(){if(!modal.open)shot()};
+const tick=updateGame;updateGame=function(dt){if(modal.open||queue.open||scoreboard.open)return;tick(dt)};const shot=firePlayer;firePlayer=function(){if(!modal.open&&!queue.open&&!scoreboard.open)shot()};
 })();

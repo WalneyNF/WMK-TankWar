@@ -26,7 +26,7 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** protótipo v1.3 publicado; validação interativa pendente.
+**Estado do repositório:** protótipo v1.4 publicado; validação interativa pendente.
 
 ## Como executar
 
@@ -91,3 +91,7 @@ World of Tanks e War Thunder são referências de gênero; WMK TankWar não poss
 V1.3 — Equipes 3×3 e 5×5 (incluindo jogador), bots aliados azuis e inimigos vermelhos, minimapa móvel, zoom arcade pela roda do mouse, veículos ampliados, mapa Vale WMK de 3600 × 2400 unidades, efeitos sonoros sintetizados e editor de mapas 2D. Editor permite inserir construções e rochas, remover obstáculos, posicionar cinco spawns por equipe, desfazer, salvar localmente e importar/exportar JSON. Treinos em equipe não alteram economia. Navegação dos bots é heurística local, sem pathfinding global. Catálogo JSON espelhado em catalog.js para abertura offline; ainda não é carregado diretamente do JSON. Testes sintáticos e validação de mapas executados; teste interativo pendente. Recomenda-se Live Server/XAMPP para compartilhar localStorage entre editor e jogo.
 
 [Editor de mapas](editor-mapas.html) · [Mapa exemplo](maps/vale-wmk.json)
+
+## V1.4 — Dificuldade e mapas maiores
+
+V1.4 — Níveis Recruta, Fácil, Normal, Difícil e Elite, com ajuste independente dos aliados e inimigos em 3×3/5×5. Padrão: inimigos Fácil, aliados Normal; batalha solo também inicia com inimigos Fácil. Mapas Vale (3600×2400), Planícies (6000×4000, padrão) e Fronteira (8000×6000), além do mapa personalizado. Recruta reduz resistência, dano, blindagem, penetração, velocidade, alcance e precisão, aumentando a recarga. Os perfis são parâmetros de jogo, não IA externa. Mapas JSON em maps/; referência dos níveis em data/bot-difficulty.json, espelhada no JavaScript. A revanche preserva mapa e níveis. Mapas maiores aumentam o tempo de deslocamento. Sintaxe e validação dos três mapas verificadas; teste de balanceamento em navegador pendente.

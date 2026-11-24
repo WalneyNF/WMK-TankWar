@@ -1090,8 +1090,8 @@
       const spread = (8 + game.stats.accuracy * 34) * (game.aimBloom || 1);
       const randomAngle = (Math.random() - .5) * spread * .006;
       const angle = aimAngle + randomAngle;
-      const startX = p.x + Math.cos(angle) * 28;
-      const startY = p.y + Math.sin(angle) * 28;
+      const startX = p.x + Math.cos(angle) * 72;
+      const startY = p.y + Math.sin(angle) * 72;
       const damageScale = game.tank.class === "spg" ? .55 : 1;
 
       game.shots.push({

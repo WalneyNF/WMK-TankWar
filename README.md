@@ -26,7 +26,7 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** protótipo v1.2 publicado; validação interativa pendente.
+**Estado do repositório:** protótipo v1.3 publicado; validação interativa pendente.
 
 ## Como executar
 
@@ -85,3 +85,9 @@ World of Tanks e War Thunder são referências de gênero; WMK TankWar não poss
 - TREINAMENTO: mapa 2D separado, cinco alvos passivos, obstáculos, reparo e restauração de alvos. Sem recompensas ou contagem de batalhas.
 - O layout padrão foi atualizado; a chave antiga de layout foi preservada no navegador, mas não é carregada automaticamente.
 - Verificação sintática concluída; teste interativo em navegador pendente.
+
+## V1.3
+
+V1.3 — Equipes 3×3 e 5×5 (incluindo jogador), bots aliados azuis e inimigos vermelhos, minimapa móvel, zoom arcade pela roda do mouse, veículos ampliados, mapa Vale WMK de 3600 × 2400 unidades, efeitos sonoros sintetizados e editor de mapas 2D. Editor permite inserir construções e rochas, remover obstáculos, posicionar cinco spawns por equipe, desfazer, salvar localmente e importar/exportar JSON. Treinos em equipe não alteram economia. Navegação dos bots é heurística local, sem pathfinding global. Catálogo JSON espelhado em catalog.js para abertura offline; ainda não é carregado diretamente do JSON. Testes sintáticos e validação de mapas executados; teste interativo pendente. Recomenda-se Live Server/XAMPP para compartilhar localStorage entre editor e jogo.
+
+[Editor de mapas](editor-mapas.html) · [Mapa exemplo](maps/vale-wmk.json)

@@ -909,7 +909,7 @@
       const alive = game.enemies.filter(enemy => enemy.alive).length;
       $("battleVehicleName").textContent = `${game.tank.name.toUpperCase()} · TIER ${ROMAN[game.tank.tier]}`;
       $("battleVehicleMeta").textContent = `${CLASS_LABELS[game.tank.class]} · ${game.mode === "arty" ? "Mira estratégica" : game.mode === "sniper" ? "Mira telescópica" : "Mira arcade"}`;
-      $("objectiveText").textContent = game.teamSize ? `AZUL ${Number(game.player.hp>0)+(game.allies||[]).filter(u=>u.alive).length} × ${alive} VERMELHO` : `Alvos: ${game.enemies.length-alive} / ${game.enemies.length}`;
+      $("objectiveText").textContent = game.teamSize ? `AZUL ${Number(game.player.hp>0)+(game.allies||[]).filter(u=>u.alive).length} × ${alive} VERMELHO · ${botProfiles()[game.difficulty].label}` : `Alvos: ${game.enemies.length-alive} / ${game.enemies.length}`;
 
       const hpRatio = Math.max(0, game.player.hp / game.player.maxHp);
       $("hpFill").style.width = `${hpRatio * 100}%`;
@@ -1234,23 +1234,24 @@
       const red=game.enemies.filter(u=>u.alive);
       for(const bot of [...red,...(game.allies||[]).filter(u=>u.alive)]){
         if(bot.passive)continue;
+        const profile=bot.profile||botProfiles().easy;
         const targets=bot.team==="blue"?red:blue;
         if(!targets.length)continue;
         const target=targets.reduce((best,u)=>Math.hypot(u.x-bot.x,u.y-bot.y)<Math.hypot(best.x-bot.x,best.y-bot.y)?u:best);
         const dx=target.x-bot.x,dy=target.y-bot.y,dist=Math.hypot(dx,dy),angle=Math.atan2(dy,dx);
         bot.turretAngle=angle;
-        if(dist>300){
+        if(dist>Math.min(300,profile.range*.72)){
           const choices=[angle,angle+.8,angle-.8,angle+1.5,angle-1.5];
           for(const heading of choices){
-            const nx=bot.x+Math.cos(heading)*70*dt,ny=bot.y+Math.sin(heading)*70*dt;
+            const nx=bot.x+Math.cos(heading)*profile.speed*dt,ny=bot.y+Math.sin(heading)*profile.speed*dt;
             if(!isBlocked(nx,ny,34)&&![...blue,...red].some(u=>u!==bot&&Math.hypot(u.x-nx,u.y-ny)<64)){bot.x=nx;bot.y=ny;bot.angle=heading;break}
           }
         }
         bot.cooldown-=dt;
-        if(dist<900&&bot.cooldown<=0&&clearLine(bot,target)){
-          const angle2=angle+(Math.random()-.5)*.09;
+        if(dist<profile.range&&bot.cooldown<=0&&clearLine(bot,target)){
+          const angle2=angle+(Math.random()-.5)*profile.spread;
           game.shots.push({x:bot.x+Math.cos(angle2)*35,y:bot.y+Math.sin(angle2)*35,vx:Math.cos(angle2)*550,vy:Math.sin(angle2)*550,owner:bot.team==="blue"?"ally":"enemy",damage:bot.damage,pen:bot.pen,life:2.8});
-          bot.cooldown=3+Math.random()*2;
+          bot.cooldown=profile.reload+Math.random()*1.5;
           if(dist<450)WMKAudio.play("bot");
         }
       }
@@ -1325,7 +1326,7 @@
       }
 
       const stats = effectiveStats(tank);
-      const selectedMap = training ? null : WMKMaps.validate(config.map || WMKMaps.defaultMap);
+      const selectedMap = training ? null : WMKMaps.validate(config.map || WMKMaps.presets.large);
       WORLD_W = selectedMap ? selectedMap.width : 2200; WORLD_H = selectedMap ? selectedMap.height : 1500;
       const centerX = WORLD_W / 2;
       const centerY = WORLD_H / 2;
@@ -1360,7 +1361,7 @@
 
       const rect = $("battleCanvas").getBoundingClientRect();
       game = {
-        training, map:selectedMap, teamSize:config.teamSize||0, zoom:0.72,
+        training, map:selectedMap, teamSize:config.teamSize||0, difficulty:botProfiles()[config.difficulty]?config.difficulty:'easy', allyDifficulty:botProfiles()[config.allyDifficulty]?config.allyDifficulty:'normal', zoom:0.72,
         tank,
         stats,
         mode: tank.class === "spg" ? "arty" : "arcade",
@@ -1464,7 +1465,7 @@
     });
 
     $("resultGarage").addEventListener("click", exitBattle);
-    $("resultAgain").addEventListener("click", ()=>startBattle({training:game?.training,teamSize:game?.teamSize,map:game?.map}));
+    $("resultAgain").addEventListener("click", ()=>startBattle({training:game?.training,teamSize:game?.teamSize,map:game?.map,difficulty:game?.difficulty,allyDifficulty:game?.allyDifficulty}));
 
     $("resetButton").addEventListener("click", () => {
       if (!confirm("Apagar o progresso salvo e reiniciar a garagem?")) return;
@@ -1535,7 +1536,7 @@
 const key='wmk-tankwar-layout-v2'; const work={garage:document.querySelector('.garage-layout'),battle:document.querySelector('.battle-shell')};
 const panels={garage:{},battle:{}}; let z=10; let saved={}; try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}; let layouts=saved.layouts||{}; let active=saved.active||'Padrão';
 const presets={garage:{fleet:[0,.76,1,.24],viewport:[0,0,.74,.60],summary:[0,.60,.74,.16],stats:[.74,0,.26,.39],modules:[.74,.39,.26,.37]},battle:{vehicle:[0,0,.22,.13],modes:[.34,0,.32,.13],objective:[.78,0,.22,.18],hp:[0,.85,.23,.15],reload:[.24,.85,.23,.15],help:[.68,.80,.32,.20]}};
-const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.3</span>`;document.querySelector('.topbar').after(toolbar);
+const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.4</span>`;document.querySelector('.topbar').after(toolbar);
 function persist(){try{localStorage.setItem(key,JSON.stringify({active,layouts,current:collect()}))}catch{}}
 function repaint(){if(currentPage==='garage')drawHangar();else if(currentPage==='battle'&&game)renderBattle()}
 function rect(p,r){p.style.left=(r[0]*100)+'%';p.style.top=(r[1]*100)+'%';p.style.width=(r[2]*100)+'%';p.style.height=(r[3]*100)+'%'}
@@ -1589,15 +1590,16 @@ new ResizeObserver(()=>{if(currentPage==='garage'&&!panels.garage.viewport.hidde
 })();
 
   
-function makeBot(p,i,team,stats,tier){const hp=Math.max(220,Math.round(stats.hp*.78));return {x:p.x,y:p.y,team,angle:team==="blue"?-Math.PI/2:Math.PI/2,turretAngle:0,hp,maxHp:hp,armor:Math.max(15,Math.round(stats.armor*.7)),damage:Math.max(25,Math.round(stats.damage*.65)),pen:stats.pen,class:["medium","light","heavy","td","medium"][i%5],alive:true,cooldown:1+i*.5}}
+function botProfiles(){return {"recruit":{"label":"Recruta","hp":0.45,"damage":0.22,"armor":0.3,"pen":0.55,"speed":42,"range":380,"spread":0.65,"reload":9,"delay":5},"easy":{"label":"Fácil","hp":0.6,"damage":0.35,"armor":0.45,"pen":0.75,"speed":54,"range":520,"spread":0.4,"reload":7,"delay":3},"normal":{"label":"Normal","hp":0.78,"damage":0.65,"armor":0.7,"pen":1,"speed":70,"range":750,"spread":0.17,"reload":4.5,"delay":2},"hard":{"label":"Difícil","hp":1,"damage":0.85,"armor":0.9,"pen":1.1,"speed":80,"range":900,"spread":0.09,"reload":3,"delay":1},"elite":{"label":"Elite","hp":1.2,"damage":1,"armor":1,"pen":1.2,"speed":90,"range":1000,"spread":0.05,"reload":2.5,"delay":1}}}
+function makeBot(p,i,team,stats,tier){const profile=botProfiles()[team==="blue"?game.allyDifficulty:game.difficulty]||botProfiles().easy;const hp=Math.max(70,Math.round(stats.hp*profile.hp));return {x:p.x,y:p.y,team,profile,angle:team==="blue"?-Math.PI/2:Math.PI/2,turretAngle:0,hp,maxHp:hp,armor:Math.max(5,Math.round(stats.armor*profile.armor)),damage:Math.max(4,Math.round(stats.damage*profile.damage)),pen:Math.round(stats.pen*profile.pen),class:["medium","light","heavy","td","medium"][i%5],alive:true,cooldown:profile.delay+i*.5}}
 function clearLine(a,b){let n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/24);for(let i=1;i<n;i++)if(isBlocked(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,1))return false;return true}
 function botDamage(u,s){if(s.pen>=u.armor){u.hp=Math.max(0,u.hp-Math.round(s.damage));addEffect(u.x,u.y,"#f1b46b","-"+Math.round(s.damage));if(!u.hp){u.alive=false;addEffect(u.x,u.y,"#f0ad68","DESTRUÍDO")}}}
 function drawMinimap(){const c=$("wmkMinimap");if(!c||!game)return;const ctx=c.getContext("2d"),w=c.width,h=c.height,sc=Math.min(w/WORLD_W,h/WORLD_H),ox=(w-WORLD_W*sc)/2,oy=(h-WORLD_H*sc)/2;ctx.fillStyle="#101610";ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(ox,oy);ctx.scale(sc,sc);ctx.fillStyle="#59634d";ctx.fillRect(0,0,WORLD_W,WORLD_H);ctx.fillStyle="#343d30";for(const o of game.training?trainingObstacles:game.map?.obstacles||obstacles){if(o.kind==="building")ctx.fillRect(o.x,o.y,o.w,o.h);else{ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill()}}const dot=(u,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(u.x,u.y,Math.max(32,3/sc),0,7);ctx.fill()};for(const u of game.enemies)if(u.alive)dot(u,"#ff665b");for(const u of game.allies||[])if(u.alive)dot(u,"#58aaff");if(game.player.hp>0)dot(game.player,"#b9e9ff");const r=$("battleCanvas").getBoundingClientRect(),cam=cameraFor(r.width,r.height);ctx.strokeStyle="#e7e8c7";ctx.lineWidth=1/sc;ctx.strokeRect(cam.x-r.width/2/cam.scale,cam.y-r.height/2/cam.scale,r.width/cam.scale,r.height/cam.scale);ctx.restore()}
 (()=>{
 const bar=document.querySelector(".wmk-command"),b=document.createElement("button");b.textContent="3×3 / 5×5";bar.append(b);const edit=document.createElement("button");edit.textContent="EDITOR DE MAPAS";bar.append(edit);const sound=document.createElement("button");sound.textContent="SOM: ON";bar.append(sound);sound.onclick=()=>{WMKAudio.enabled=!WMKAudio.enabled;sound.textContent="SOM: "+(WMKAudio.enabled?"ON":"OFF");WMKAudio.resume()};
 document.addEventListener("pointerdown",()=>WMKAudio.resume(),{passive:true});
-const modal=document.createElement("dialog");modal.className="wmk-debug";modal.innerHTML='<form method="dialog"><header><strong>TREINO EM EQUIPE</strong><button value="close">×</button></header></form><p>Você integra a equipe azul. Bots aliados e inimigos. Sem recompensas.</p><label>Mapa <select id="wmkTeamMap"><option value="default">Vale WMK</option><option value="custom">Mapa do editor</option></select></label><div class="dbg-actions"><button id="wmk3">3 × 3</button><button id="wmk5">5 × 5</button></div>';document.body.append(modal);
-b.onclick=()=>{pressedKeys={};modal.showModal()};const launch=n=>{const map=$("wmkTeamMap").value==="custom"?WMKMaps.load():WMKMaps.defaultMap;if(!map)return notify("Salve um mapa no editor primeiro.");if(game?.active&&!confirm("Encerrar sessão atual?"))return;modal.close();startBattle({teamSize:n,map})};$("wmk3").onclick=()=>launch(3);$("wmk5").onclick=()=>launch(5);
+const modal=document.createElement("dialog");modal.className="wmk-debug";modal.innerHTML='<form method="dialog"><header><strong>TREINO EM EQUIPE</strong><button value="close">×</button></header></form><p>Você integra a equipe azul. Bots aliados e inimigos. Sem recompensas.</p><label>Mapa <select id="wmkTeamMap"><option value="default">Vale WMK · 3600 × 2400</option><option value="large" selected>Planícies WMK · 6000 × 4000</option><option value="huge">Fronteira WMK · 8000 × 6000</option><option value="custom">Mapa do editor</option></select></label><label>Inimigos <select id="wmkDifficulty"><option value="recruit">Recruta</option><option value="easy" selected>Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><label>Aliados <select id="wmkAllyDifficulty"><option value="recruit">Recruta</option><option value="easy">Fácil</option><option value="normal" selected>Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><p>Recruta e Fácil: inimigos menos resistentes, lentos e imprecisos. Aliados podem ter nível diferente.</p><div class="dbg-actions"><button id="wmk3">3 × 3</button><button id="wmk5">5 × 5</button></div>';document.body.append(modal);
+b.onclick=()=>{pressedKeys={};modal.showModal()};const launch=n=>{const map=$("wmkTeamMap").value==="custom"?WMKMaps.load():WMKMaps.presets[$("wmkTeamMap").value];if(!map)return notify("Salve um mapa no editor primeiro.");if(game?.active&&!confirm("Encerrar sessão atual?"))return;modal.close();startBattle({teamSize:n,map,difficulty:$("wmkDifficulty").value,allyDifficulty:$("wmkAllyDifficulty").value})};$("wmk3").onclick=()=>launch(3);$("wmk5").onclick=()=>launch(5);
 edit.onclick=()=>window.open("editor-mapas.html","_blank","noopener");
 $("battleCanvas").addEventListener("wheel",e=>{if(!game||game.mode!=="arcade")return;e.preventDefault();game.zoom=Math.max(.45,Math.min(1.35,game.zoom*(e.deltaY>0?.9:1.1)))},{passive:false});
 const tick=updateGame;updateGame=function(dt){if(modal.open)return;tick(dt)};const shot=firePlayer;firePlayer=function(){if(!modal.open)shot()};

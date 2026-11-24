@@ -26,7 +26,7 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** protótipo v1.4 publicado; validação interativa pendente.
+**Estado do repositório:** protótipo v1.5 publicado; validação interativa pendente.
 
 ## Como executar
 
@@ -95,3 +95,11 @@ V1.3 — Equipes 3×3 e 5×5 (incluindo jogador), bots aliados azuis e inimigos 
 ## V1.4 — Dificuldade e mapas maiores
 
 V1.4 — Níveis Recruta, Fácil, Normal, Difícil e Elite, com ajuste independente dos aliados e inimigos em 3×3/5×5. Padrão: inimigos Fácil, aliados Normal; batalha solo também inicia com inimigos Fácil. Mapas Vale (3600×2400), Planícies (6000×4000, padrão) e Fronteira (8000×6000), além do mapa personalizado. Recruta reduz resistência, dano, blindagem, penetração, velocidade, alcance e precisão, aumentando a recarga. Os perfis são parâmetros de jogo, não IA externa. Mapas JSON em maps/; referência dos níveis em data/bot-difficulty.json, espelhada no JavaScript. A revanche preserva mapa e níveis. Mapas maiores aumentam o tempo de deslocamento. Sintaxe e validação dos três mapas verificadas; teste de balanceamento em navegador pendente.
+
+## V1.5 — Matchmaker
+
+V1.5 — Blindados com dimensões visuais duplicadas em relação à V1.4; raio de impacto, colisões e posição inicial dos disparos ajustados. Batalhas offline com bots 3×3, 5×5, 10×10 e 15×15. Fila simulada local de cerca de 2,6 segundos, cancelável, seguida da escalação e entrada manual. Nomes fictícios identificados como bots. Matchmaker seleciona veículos do catálogo dentro de ±1 tier do jogador, limitado aos tiers I–IV existentes; espelha quantidade de cada tier e classe e iguala soma dos tiers. Dificuldade pode ser diferente entre equipes e altera a força efetiva. Bots usam atributos do veículo selecionado pelo matchmaker. TAB ou EQUIPES abre escalação com HP e eliminados, pausando o jogo local. Pontos de nascimento extras gerados automaticamente e validados. Testes automatizados: 3200 escalações aprovadas e 12 combinações de mapas e tamanhos de equipes validadas. Teste interativo e desempenho 15×15 ainda pendentes.
+
+## Multiplayer futuro
+
+Multiplayer online futuro: servidor autoritativo para simulação e resultados, autenticação e perfis, lobby e fila real por região/tier, matchmaking de jogadores e bots opcionais claramente identificados, sincronização por WebSocket, interpolação e previsão de movimento, reconexão, persistência de economia no servidor, validação de ações e proteção antitrapaça. Etapas: separar simulação do DOM; protocolo de mensagens e testes de rede; protótipo LAN; servidor online; teste de carga e segurança. Nenhuma conexão multiplayer foi implementada nesta versão.

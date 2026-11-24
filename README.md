@@ -24,9 +24,9 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** documentação inicial; a publicação do código jogável e sua validação interativa são etapas seguintes.
+**Estado do repositório:** protótipo v1.1 publicado; validação interativa pendente.
 
-## Como executar após a publicação do código
+## Como executar
 
 Baixe o projeto pelo botão Code > Download ZIP, extraia os arquivos e abra o index.html no navegador. Alternativamente, utilize o Live Server do VS Code ou o XAMPP.
 
@@ -45,7 +45,8 @@ git clone https://github.com/WalneyNF/WMK-TankWar.git
 
 ## Roadmap
 
-- [ ] Publicar e validar o protótipo existente.
+- [x] Publicar o protótipo existente.
+- [ ] Validar o protótipo no navegador.
 - [ ] Consolidar painéis móveis, fechamento, encaixe, redimensionamento e layouts JSON.
 - [ ] Aprimorar hangar e árvore tecnológica por nação, classe e tier.
 - [ ] Separar os dados em arquivos JSON individuais por veículo.
@@ -67,3 +68,9 @@ O código original deste projeto é distribuído sob a [licença MIT](LICENSE). 
 World of Tanks e War Thunder são referências de gênero; WMK TankWar não possui vínculo oficial com seus desenvolvedores e não reivindica direitos sobre suas marcas ou recursos.
 
 © 2026 Walney Moreira Klein.
+
+## Documentação HTML
+
+- [Roadmap](roadmap.html)
+- [Manual de primeiro contato](manuais/manual.html)
+- [Arquitetura e diagnóstico](manuais/arquitetura.html)

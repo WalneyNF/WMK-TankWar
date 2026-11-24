@@ -1106,6 +1106,7 @@
     }
 
     function damageEnemy(enemy, damage, pen, splashDistance = null, splashRadius = 0) {
+      if(!enemy.alive)return;
       const armor = enemy.armor + Math.random() * 22;
       if (pen >= armor) {
         const dealt = Math.max(1, Math.round(damage * (.82 + Math.random() * .30)));
@@ -1219,7 +1220,7 @@
         const nx = p.x + Math.cos(p.angle) * distance;
         const ny = p.y + Math.sin(p.angle) * distance;
 
-        if (!isBlocked(nx, ny, 25)) {
+        if (!isBlocked(nx, ny, 34) && ![...game.enemies,...(game.allies||[])].some(u=>u.alive&&Math.hypot(u.x-nx,u.y-ny)<64)) {
           p.x = nx;
           p.y = ny;
         }
@@ -1392,6 +1393,7 @@
       pressedKeys = {};
       $("battleResult").classList.remove("show");
       showPage("battle");
+      const visibleRect=$("battleCanvas").getBoundingClientRect();game.mouse={x:visibleRect.width/2,y:visibleRect.height/2};
       startBattleLoop();
       updateBattleHud();
     }
@@ -1498,7 +1500,7 @@
     window.addEventListener("keydown", event => {
       if (currentPage !== "battle" || !game || !game.active) return;
 
-      if (event.target.closest("input,select,textarea,button,dialog,[contenteditable]")) return;
+      if (event.target.closest("input,select,textarea,dialog,[contenteditable]")) return;
       const key = event.key.toLowerCase();
       const controlled = ["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," "];
 

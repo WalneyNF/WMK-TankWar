@@ -107,3 +107,9 @@ Multiplayer online futuro: servidor autoritativo para simulação e resultados, 
 ## V1.6 — HUD e efeitos de combate
 
 V1.6 — Escalação com miniaturas vetoriais, nomes fictícios, classe, tier, HP previsto antes da partida e HP atual no painel TAB. HUD de equipes com ícones e barras individuais, marcadores de nome/veículo/classe/HP sobre todos os tanques vivos, minimapa com grade, direção e barras de HP. Números flutuantes mostram HP efetivamente perdido; efeitos de disparo, rastros, faíscas, fumaça, impacto e destruição. Áudio sintetizado em camadas com limite de 12 vozes; partículas limitadas a 120 efeitos simultâneos. Próximos passos: feed de eliminações, estatísticas de precisão e dano, resultados detalhados, captura de bases, espectador, opções de densidade do HUD e testes de desempenho. Minimap mantém marcadores compactos para evitar poluição; nomes e tipos completos aparecem na escalação e sobre os veículos. Sintaxe validada, teste visual e sonoro em navegador pendente.
+
+## Laboratório 3D — Alpha 0.1
+
+[Abrir protótipo](tankwar3d.html)
+
+Alpha 0.1 3D independente: Vale de Ferro, terreno procedural, árvores instanciadas, construções, estradas, blindados geométricos, câmera terceira pessoa, combate local 3/5/10/15 por lado, matchmaking existente, spawns distribuídos, três rotas iniciais, desvio local, HUD, HP, dano flutuante, áudio e minimapa. Requer WebGL, acesso ao CDN Three.js 0.160.1 e servidor HTTP local. Protótipo sem modelos GLB, rios, pontes, captura de bases, A*, física avançada ou multiplayer. A progressão 2D permanece independente. Sintaxe verificada; execução gráfica não testada.

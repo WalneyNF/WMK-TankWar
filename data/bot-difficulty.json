@@ -1,0 +1,62 @@
+{
+  "recruit": {
+    "label": "Recruta",
+    "hp": 0.45,
+    "damage": 0.22,
+    "armor": 0.3,
+    "pen": 0.55,
+    "speed": 42,
+    "range": 380,
+    "spread": 0.65,
+    "reload": 9,
+    "delay": 5
+  },
+  "easy": {
+    "label": "Fácil",
+    "hp": 0.6,
+    "damage": 0.35,
+    "armor": 0.45,
+    "pen": 0.75,
+    "speed": 54,
+    "range": 520,
+    "spread": 0.4,
+    "reload": 7,
+    "delay": 3
+  },
+  "normal": {
+    "label": "Normal",
+    "hp": 0.78,
+    "damage": 0.65,
+    "armor": 0.7,
+    "pen": 1,
+    "speed": 70,
+    "range": 750,
+    "spread": 0.17,
+    "reload": 4.5,
+    "delay": 2
+  },
+  "hard": {
+    "label": "Difícil",
+    "hp": 1,
+    "damage": 0.85,
+    "armor": 0.9,
+    "pen": 1.1,
+    "speed": 80,
+    "range": 900,
+    "spread": 0.09,
+    "reload": 3,
+    "delay": 1
+  },
+  "elite": {
+    "label": "Elite",
+    "hp": 1.2,
+    "damage": 1,
+    "armor": 1,
+    "pen": 1.2,
+    "speed": 90,
+    "range": 1000,
+    "spread": 0.05,
+    "reload": 2.5,
+    "delay": 1
+  }
+}

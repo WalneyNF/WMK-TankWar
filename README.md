@@ -26,7 +26,7 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** protótipo v1.1 publicado; validação interativa pendente.
+**Estado do repositório:** protótipo v1.2 publicado; validação interativa pendente.
 
 ## Como executar
 
@@ -76,3 +76,12 @@ World of Tanks e War Thunder são referências de gênero; WMK TankWar não poss
 - [Roadmap](roadmap.html)
 - [Manual de primeiro contato](manuais/manual.html)
 - [Arquitetura e diagnóstico](manuais/arquitetura.html)
+
+## V1.2 — Hangar, pesquisa e treinamento
+
+- Carrossel horizontal com miniaturas vetoriais originais e painel flexível.
+- Árvore com cabeçalhos de tiers, conectores e estados de aquisição.
+- DEBUG: adicionar/definir créditos e XP, liberar veículos e módulos.
+- TREINAMENTO: mapa 2D separado, cinco alvos passivos, obstáculos, reparo e restauração de alvos. Sem recompensas ou contagem de batalhas.
+- O layout padrão foi atualizado; a chave antiga de layout foi preservada no navegador, mas não é carregada automaticamente.
+- Verificação sintática concluída; teste interativo em navegador pendente.

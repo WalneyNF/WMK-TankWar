@@ -26,7 +26,7 @@ A versão desenvolvida localmente utiliza HTML, CSS, JavaScript e Canvas 2D, com
 - Progresso salvo no navegador.
 - Interface Workspace com painéis móveis, redimensionáveis e layouts personalizáveis, sujeita a testes.
 
-**Estado do repositório:** protótipo v1.5 publicado; validação interativa pendente.
+**Estado do repositório:** protótipo v1.6 publicado; validação interativa pendente.
 
 ## Como executar
 
@@ -103,3 +103,7 @@ V1.5 — Blindados com dimensões visuais duplicadas em relação à V1.4; raio 
 ## Multiplayer futuro
 
 Multiplayer online futuro: servidor autoritativo para simulação e resultados, autenticação e perfis, lobby e fila real por região/tier, matchmaking de jogadores e bots opcionais claramente identificados, sincronização por WebSocket, interpolação e previsão de movimento, reconexão, persistência de economia no servidor, validação de ações e proteção antitrapaça. Etapas: separar simulação do DOM; protocolo de mensagens e testes de rede; protótipo LAN; servidor online; teste de carga e segurança. Nenhuma conexão multiplayer foi implementada nesta versão.
+
+## V1.6 — HUD e efeitos de combate
+
+V1.6 — Escalação com miniaturas vetoriais, nomes fictícios, classe, tier, HP previsto antes da partida e HP atual no painel TAB. HUD de equipes com ícones e barras individuais, marcadores de nome/veículo/classe/HP sobre todos os tanques vivos, minimapa com grade, direção e barras de HP. Números flutuantes mostram HP efetivamente perdido; efeitos de disparo, rastros, faíscas, fumaça, impacto e destruição. Áudio sintetizado em camadas com limite de 12 vozes; partículas limitadas a 120 efeitos simultâneos. Próximos passos: feed de eliminações, estatísticas de precisão e dano, resultados detalhados, captura de bases, espectador, opções de densidade do HUD e testes de desempenho. Minimap mantém marcadores compactos para evitar poluição; nomes e tipos completos aparecem na escalação e sobre os veículos. Sintaxe validada, teste visual e sonoro em navegador pendente.

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WMK TankWar — Blindados</title>
+
+  <link rel="stylesheet" href="css/game.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WMK TankWar</div>
+        <span class="brand-sub">WORKSPACE <span class="wmk-version">V1.1</span></span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="active" data-page="garage">Hangar</button>
+      <button data-page="tree">Árvore tecnológica</button>
+      <button data-page="battle">Combate</button>
+    </nav>
+
+    <div class="wallet">
+      <div class="wallet-item">Créditos<strong id="creditsValue">0</strong></div>
+      <div class="wallet-item xp">Experiência<strong id="xpValue">0</strong></div>
+      <div class="wallet-item">Batalhas<strong id="battlesValue">0</strong></div>
+      <button class="icon-button" id="resetButton" title="Apagar progresso">↺</button>
+    </div>
+  </header>
+
+  <div id="toast" class="toast"></div>
+
+  <main>
+    <section id="garagePage" class="page active">
+      <div class="garage-layout">
+        <aside class="panel fleet">
+          <div class="panel-heading">
+            <h2>Frota</h2>
+            <span id="fleetCount" class="subtle-count">0 / 20</span>
+          </div>
+          <div class="filter-wrap">
+            <select id="classFilter">
+              <option value="all">Todas as categorias</option>
+              <option value="light">Leves</option>
+              <option value="medium">Médios</option>
+              <option value="heavy">Pesados</option>
+              <option value="td">Caça-tanques</option>
+              <option value="spg">AAP</option>
+            </select>
+          </div>
+          <div id="tankList" class="tank-list"></div>
+        </aside>
+
+        <section class="hangar-main">
+          <div class="page-heading">
+            <h1>Hangar principal</h1>
+            <span class="eyebrow">Base de operações · Liga de WMK TankWar</span>
+          </div>
+
+          <div class="hangar-stage">
+            <canvas id="hangarCanvas"></canvas>
+            <div class="stage-label">
+              Inspeção de veículo
+              <span id="stageMeta">Modelo de demonstração</span>
+            </div>
+            <div class="stage-controls">Pré-visualização esquemática do blindado</div>
+          </div>
+
+          <div class="vehicle-summary">
+            <div class="vehicle-title-box">
+              <span id="tankClassTag" class="class-tag">Categoria</span>
+              <h2 id="tankName">Veículo</h2>
+              <p id="tankDescription"></p>
+            </div>
+            <div class="quick-stat"><span>Durabilidade</span><strong id="quickHp">—</strong><em>pontos</em></div>
+            <div class="quick-stat"><span>Dano</span><strong id="quickDamage">—</strong><em>por disparo</em></div>
+            <div class="quick-stat"><span>Velocidade</span><strong id="quickSpeed">—</strong><em>km/h</em></div>
+            <div class="quick-stat"><span>Blindagem</span><strong id="quickArmor">—</strong><em>frontal</em></div>
+          </div>
+        </section>
+
+        <aside class="panel details-panel">
+          <div class="panel-heading">
+            <h2>Parâmetros</h2>
+            <span id="tierBadge" class="subtle-count">Tier I</span>
+          </div>
+
+          <div id="availability" class="availability">Na garagem</div>
+          <div id="vehicleStats" class="vehicle-stats"></div>
+          <div id="detailGrid" class="detail-grid"></div>
+
+          <button id="battleButton" class="primary-button battle-button">Entrar em combate</button>
+
+          <div class="module-heading">Módulos do veículo</div>
+          <p class="module-help">Compre melhorias com créditos e equipe-as no veículo selecionado.</p>
+          <div id="moduleList" class="module-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="treePage" class="page">
+      <div class="tree-page">
+        <div class="tree-title-row">
+          <div>
+            <h1>Árvore tecnológica</h1>
+            <p>Pesquise veículos, compre-os e avance por cada linha de blindados.</p>
+          </div>
+          <select id="treeFilter" class="tree-filter">
+            <option value="all">Todas as categorias</option>
+            <option value="light">Leves</option>
+            <option value="medium">Médios</option>
+            <option value="heavy">Pesados</option>
+            <option value="td">Caça-tanques</option>
+            <option value="spg">AAP</option>
+          </select>
+        </div>
+
+        <div class="nation-strip"><strong>NAÇÕES</strong><button type="button" class="nation-active">Liga WMK · 20 veículos</button><span>Outras nações em desenvolvimento</span></div><div class="tree-note">
+          Para avançar numa linha, o veículo anterior precisa estar na sua garagem.
+          Pesquise com experiência e compre o veículo com créditos. Clique no nome de um tanque para vê-lo no hangar.
+        </div>
+
+        <div id="treeGrid" class="tree-scroll"></div>
+      </div>
+    </section>
+
+    <section id="battlePage" class="page">
+      <div class="battle-shell">
+        <canvas id="battleCanvas"></canvas>
+
+        <div class="battle-top">
+          <div class="battle-card">
+            <div id="battleVehicleName" class="battle-vehicle-name">VEÍCULO</div>
+            <div id="battleVehicleMeta" class="battle-vehicle-meta">Preparando missão</div>
+          </div>
+
+          <div class="mode-selector">
+            <button class="mode-button" data-mode="arcade">Arcade</button>
+            <button class="mode-button" data-mode="sniper">Telescópica</button>
+            <button class="mode-button" data-mode="arty">AAP</button>
+          </div>
+
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <div class="battle-card objective-card">
+              <div id="objectiveText">Alvos: 0 / 0</div>
+              <span>Destrua os veículos inimigos</span>
+            </div>
+            <button id="leaveBattle" class="leave-button">Sair da missão</button>
+          </div>
+        </div>
+
+        <div id="battleMessage" class="battle-message"></div>
+
+        <div id="aimLabel" class="aim-label">Mira arcade</div>
+
+        <div class="battle-bottom">
+          <div class="hud-box">
+            <div class="hud-label"><span>Integridade do casco</span><strong id="hpText">—</strong></div>
+            <div class="hud-bar"><i id="hpFill"></i></div>
+          </div>
+          <div class="hud-box">
+            <div class="hud-label"><span>Recarga</span><strong id="reloadText">PRONTO</strong></div>
+            <div class="hud-bar reload"><i id="reloadFill"></i></div>
+          </div>
+          <div class="controls-help">
+            <b>WASD</b> mover · <b>Mouse</b> apontar · <b>Clique / Espaço</b> disparar ·
+            <b>1 / 2 / 3</b> alternar mira
+          </div>
+        </div>
+
+        <div id="battleResult" class="battle-result">
+          <div class="result-card">
+            <h2 id="resultTitle">Missão concluída</h2>
+            <p id="resultText"></p>
+            <div id="resultRewards" class="result-rewards"></div>
+            <div class="result-actions">
+              <button id="resultGarage" class="secondary-button">Voltar ao hangar</button>
+              <button id="resultAgain" class="primary-button">Combater novamente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/catalog.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

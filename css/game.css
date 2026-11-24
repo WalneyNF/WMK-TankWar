@@ -928,3 +928,4 @@ body{--panel:#202724;--line:#414b43;font-size:12px} .topbar{min-height:54px;gap:
 
 
 #wmkMinimap{width:100%;height:auto;display:block;background:#101610}.wmk-window[data-id=minimap] small{display:block;font-size:9px;text-align:center;color:#c3cfbd}.wmk-command{flex-wrap:wrap}.wmk-command button{padding:7px 9px}.wmk-window[data-id=minimap] .wmk-content{overflow:hidden}
+.wmk-match-queue{width:min(950px,96vw);max-height:90vh;overflow:auto}.wmk-match-queue progress{width:100%;accent-color:#a8bc79}.wmk-rosters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}.wmk-rosters .blue{color:#9bd0ff}.wmk-rosters .red{color:#ffaaa0}.wmk-roster-row{padding:5px 7px;border-bottom:1px solid #465143;font-size:11px}.wmk-roster-row.eliminated{opacity:.45;text-decoration:line-through}.wmk-match-queue .dbg-actions{position:sticky;bottom:0;background:#1d261e;padding:6px}

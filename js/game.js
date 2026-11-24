@@ -811,7 +811,7 @@
 
     function cameraFor(width, height) {
       if (game && game.mode === "arty") {
-        const scale = Math.min((width - 24) / WORLD_W, (height - 40) / WORLD_H);
+        const scale = Math.max(.01,Math.min((width - 24) / WORLD_W, (height - 40) / WORLD_H));
         return { x: WORLD_W / 2, y: WORLD_H / 2, scale: scale * .98 };
       }
 
@@ -987,7 +987,7 @@
       }
 
       for (const shell of game.shots) {
-        ctx.fillStyle = shell.owner === "player" ? "#ffe299" : "#ee7764";
+        ctx.fillStyle = shell.owner === "enemy" ? "#ee7764" : "#a9dfff";
         ctx.beginPath();
         ctx.arc(shell.x, shell.y, shell.owner === "player" ? 4 : 3.5, 0, Math.PI * 2);
         ctx.fill();
@@ -1187,7 +1187,7 @@
 
       $("resultTitle").textContent = victory ? "Vitória" : "Missão encerrada";
       $("resultText").textContent = victory
-        ? `Todos os alvos foram destruídos. Veículos eliminados: ${game.kills}.`
+        ? `Equipe azul venceu. Eliminações do jogador: ${game.kills}.`
         : `O combate terminou. Veículos eliminados: ${game.kills}.`;
       $("resultRewards").textContent = practice ? "Treino em equipe · sem recompensas" : `+${formatNumber(creditReward)} créditos  ·  +${formatNumber(xpReward)} XP`;
       $("battleResult").classList.add("show");
@@ -1325,7 +1325,7 @@
       }
 
       const stats = effectiveStats(tank);
-      const selectedMap = training ? null : (config.map || WMKMaps.defaultMap);
+      const selectedMap = training ? null : WMKMaps.validate(config.map || WMKMaps.defaultMap);
       WORLD_W = selectedMap ? selectedMap.width : 2200; WORLD_H = selectedMap ? selectedMap.height : 1500;
       const centerX = WORLD_W / 2;
       const centerY = WORLD_H / 2;

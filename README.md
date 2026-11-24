@@ -113,3 +113,9 @@ V1.6 — Escalação com miniaturas vetoriais, nomes fictícios, classe, tier, H
 [Abrir protótipo](tankwar3d.html)
 
 Alpha 0.1 3D independente: Vale de Ferro, terreno procedural, árvores instanciadas, construções, estradas, blindados geométricos, câmera terceira pessoa, combate local 3/5/10/15 por lado, matchmaking existente, spawns distribuídos, três rotas iniciais, desvio local, HUD, HP, dano flutuante, áudio e minimapa. Requer WebGL, acesso ao CDN Three.js 0.160.1 e servidor HTTP local. Protótipo sem modelos GLB, rios, pontes, captura de bases, A*, física avançada ou multiplayer. A progressão 2D permanece independente. Sintaxe verificada; execução gráfica não testada.
+
+## Alpha 0.2
+
+Alpha 0.2: modelo procedural original com rodas, lagartas, escotilhas, grelhas, torre e canhão separados; câmera inicial alinhada ao casco, W/S relativo ao casco, A/D independente da câmera, captura de mouse com pausa ao liberar, interpolação angular e retículo duplo. Elevação é visual, disparo ainda horizontal; testes de navegador pendentes.
+
+[Pesquisa WOT](manuais/pesquisa-wot.html) · [Pesquisa War Thunder](manuais/pesquisa-war-thunder.html)

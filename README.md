@@ -119,3 +119,7 @@ Alpha 0.1 3D independente: Vale de Ferro, terreno procedural, árvores instancia
 Alpha 0.2: modelo procedural original com rodas, lagartas, escotilhas, grelhas, torre e canhão separados; câmera inicial alinhada ao casco, W/S relativo ao casco, A/D independente da câmera, captura de mouse com pausa ao liberar, interpolação angular e retículo duplo. Elevação é visual, disparo ainda horizontal; testes de navegador pendentes.
 
 [Pesquisa WOT](manuais/pesquisa-wot.html) · [Pesquisa War Thunder](manuais/pesquisa-war-thunder.html)
+
+## Alpha 0.4 — Mira projetada
+
+Mouse capturado com alvo virtual, torre e canhão interpolados, retículo grande na trajetória real do disparo e rotação suave do casco A/D. Spring arm traseiro mantido, com enquadramento para frente. Consulte o roadmap para o conceito visual aprovado. Testes isolados passaram; WebGL e Pointer Lock reais ainda precisam de validação.

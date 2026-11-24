@@ -799,15 +799,8 @@
 
       ctx.restore();
 
-      if (!isPlayer) {
-        if(entity.nickname){ctx.font="bold 13px Segoe UI";ctx.textAlign="center";ctx.fillStyle=entity.team==="blue"?"#c2e5ff":"#ffd1c9";ctx.fillText(entity.nickname+" · "+(entity.vehicleName||""),entity.x,entity.y-105)}
-        const barW = 86;
-        const ratio = Math.max(0, entity.hp / entity.maxHp);
-        ctx.fillStyle = "rgba(0,0,0,.6)";
-        ctx.fillRect(entity.x - barW / 2, entity.y - 94, barW, 5);
-        ctx.fillStyle = entity.team==="blue" ? "#58aaff" : "#e76b60";
-        ctx.fillRect(entity.x - barW / 2, entity.y - 94, barW * ratio, 5);
-      }
+      // Markers use screen-space rendering after the world transform.
+
     }
 
     function cameraFor(width, height) {
@@ -988,6 +981,7 @@
       }
 
       for (const shell of game.shots) {
+        ctx.strokeStyle=shell.owner==="enemy"?"#ff8a65":"#bce6ff";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(shell.x-shell.vx*.045,shell.y-shell.vy*.045);ctx.lineTo(shell.x,shell.y);ctx.stroke();
         ctx.fillStyle = shell.owner === "enemy" ? "#ee7764" : "#a9dfff";
         ctx.beginPath();
         ctx.arc(shell.x, shell.y, shell.owner === "player" ? 4 : 3.5, 0, Math.PI * 2);
@@ -995,20 +989,11 @@
       }
 
       for (const effect of game.effects) {
-        const p = 1 - effect.life / effect.maxLife;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, effect.life / effect.maxLife);
-        ctx.strokeStyle = effect.color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 10 + p * 34, 0, Math.PI * 2);
-        ctx.stroke();
-        if (effect.label) {
-          ctx.fillStyle = effect.color;
-          ctx.font = "bold 14px Segoe UI, sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(effect.label, effect.x, effect.y - 23 - p * 20);
-        }
+        const t=1-effect.life/effect.maxLife;
+        ctx.save();ctx.globalAlpha=Math.max(0,1-t);
+        ctx.strokeStyle=effect.color;ctx.lineWidth=3;
+        ctx.beginPath();ctx.arc(effect.x,effect.y,8+t*(effect.kind==="muzzle"?32:65),0,Math.PI*2);ctx.stroke();
+        for(const p of effect.particles||[]){const x=effect.x+Math.cos(p.a)*p.v*t,y=effect.y+Math.sin(p.a)*p.v*t;ctx.fillStyle=p.smoke?"#7e8275":effect.color;ctx.beginPath();ctx.arc(x,y,p.smoke?5+t*13:Math.max(1,4*(1-t)),0,Math.PI*2);ctx.fill()}
         ctx.restore();
       }
 
@@ -1020,9 +1005,12 @@
       if(game.player.hp>0)drawWorldTank(ctx, game.player, game.tank.class, "#428fcb", true);
 
       ctx.restore();
+      drawVehicleMarkers(ctx,w,h,cam);
+      drawFloatingDamage(ctx,w,h,cam);
       drawCrosshair(ctx, w, h, cam);
       updateBattleHud();
       drawMinimap();
+      updateTeamStrip();
     }
 
     function isBlocked(x, y, radius = 22) {
@@ -1041,8 +1029,8 @@
     }
 
     function addEffect(x, y, color, label = "") {
-      game.effects.push({ x, y, color, label, life: .7, maxLife: .7 });
-      if(label)WMKAudio.play(label==='RICOCHETE'||label==='BLINDAGEM'?'bounce':'hit');
+      spawnVisual(x,y,color,label,label.includes("DESTRU")?"explosion":"impact");
+      WMKAudio.play(label.includes("DESTRU")?"explosion":label==='RICOCHETE'||label==='BLINDAGEM'?'bounce':'hit');
     }
 
     function showBattleMessage(message) {
@@ -1066,6 +1054,7 @@
       p.turretAngle = aimAngle;
       game.reload = game.stats.reload;
       WMKAudio.play('fire');
+      spawnVisual(p.x+Math.cos(aimAngle)*90,p.y+Math.sin(aimAngle)*90,'#ffd089','','muzzle');
 
       if (game.tank.class === "spg" && game.mode === "arty") {
         const radius = dispersionRadius();
@@ -1110,13 +1099,13 @@
       if(!enemy.alive)return;
       const armor = enemy.armor + Math.random() * 22;
       if (pen >= armor) {
-        const dealt = Math.max(1, Math.round(damage * (.82 + Math.random() * .30)));
+        const dealt = Math.min(enemy.hp,Math.max(1, Math.round(damage * (.82 + Math.random() * .30))));
         enemy.hp -= dealt;
         addEffect(enemy.x, enemy.y, "#f4d081", `-${dealt}`);
         showBattleMessage(`Penetração · ${dealt} de dano`);
       } else if (splashDistance !== null && splashRadius > 0) {
         const factor = Math.max(.12, 1 - splashDistance / splashRadius);
-        const dealt = Math.max(8, Math.round(damage * .23 * factor));
+        const dealt = Math.min(enemy.hp,Math.max(8, Math.round(damage * .23 * factor)));
         enemy.hp -= dealt;
         addEffect(enemy.x, enemy.y, "#e5a765", `-${dealt}`);
         showBattleMessage(`Dano de explosão · ${dealt}`);
@@ -1144,7 +1133,7 @@
       else if (difference > Math.PI * .72) effectiveArmor *= .78;
 
       if (shell.pen >= effectiveArmor + Math.random() * 24) {
-        const dealt = Math.max(8, Math.round(shell.damage * (.8 + Math.random() * .28)));
+        const dealt = Math.min(p.hp,Math.max(8, Math.round(shell.damage * (.8 + Math.random() * .28))));
         p.hp -= dealt;
         addEffect(p.x, p.y, "#e47861", `-${dealt}`);
         showBattleMessage(`Impacto recebido · ${dealt} de dano`);
@@ -1253,7 +1242,8 @@
           const angle2=angle+(Math.random()-.5)*profile.spread;
           game.shots.push({x:bot.x+Math.cos(angle2)*72,y:bot.y+Math.sin(angle2)*72,vx:Math.cos(angle2)*550,vy:Math.sin(angle2)*550,owner:bot.team==="blue"?"ally":"enemy",damage:bot.damage,pen:bot.pen,life:2.8});
           bot.cooldown=profile.reload+Math.random()*1.5;
-          if(dist<450)WMKAudio.play("bot");
+          spawnVisual(bot.x+Math.cos(angle2)*90,bot.y+Math.sin(angle2)*90,"#ffc981","","muzzle");
+          if(dist<650)WMKAudio.play("bot");
         }
       }
       for(let i=game.shots.length-1;i>=0;i--){
@@ -1392,7 +1382,7 @@
         game.enemies=selectedMap.red.slice(0,game.teamSize||5).map((p,i)=>makeBot(p,i,"red",stats,tank.tier,match?.red[i]));
         game.allies=game.teamSize?selectedMap.blue.slice(1,game.teamSize).map((p,i)=>makeBot(p,i,"blue",stats,tank.tier,match?.blue[i+1])):[];
       }else game.allies=[];
-      game.player.team="blue";
+      game.player.team="blue";game.player.nickname="VOCÊ";game.player.vehicleName=tank.name;game.player.tier=tank.tier;game.player.class=tank.class;
       pressedKeys = {};
       $("battleResult").classList.remove("show");
       showPage("battle");
@@ -1538,7 +1528,7 @@
 const key='wmk-tankwar-layout-v2'; const work={garage:document.querySelector('.garage-layout'),battle:document.querySelector('.battle-shell')};
 const panels={garage:{},battle:{}}; let z=10; let saved={}; try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}; let layouts=saved.layouts||{}; let active=saved.active||'Padrão';
 const presets={garage:{fleet:[0,.76,1,.24],viewport:[0,0,.74,.60],summary:[0,.60,.74,.16],stats:[.74,0,.26,.39],modules:[.74,.39,.26,.37]},battle:{vehicle:[0,0,.22,.13],modes:[.34,0,.32,.13],objective:[.78,0,.22,.18],hp:[0,.85,.23,.15],reload:[.24,.85,.23,.15],help:[.68,.80,.32,.20]}};
-const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.5</span>`;document.querySelector('.topbar').after(toolbar);
+const toolbar=document.createElement('div');toolbar.className='wmk-tools';toolbar.innerHTML=`<details><summary>▦ Painéis</summary><div class="wmk-menu" id="wmkPanelMenu"></div></details><a class="wmk-docs" href="roadmap.html" target="_blank" rel="noopener">Roadmap</a><a class="wmk-docs" href="manuais/manual.html" target="_blank" rel="noopener">Manual</a><button id="wmkDefault">Restaurar</button><button id="wmkClean">Visão limpa</button><select id="wmkLayouts" aria-label="Layouts salvos"></select><button id="wmkSave">Salvar como</button><button id="wmkExport">Exportar JSON</button><button id="wmkImport">Importar JSON</button><input id="wmkFile" type="file" accept=".json"><span class="wmk-credit">Walney Moreira Klein — walneyk@hotmail.com · v1.6</span>`;document.querySelector('.topbar').after(toolbar);
 function persist(){try{localStorage.setItem(key,JSON.stringify({active,layouts,current:collect()}))}catch{}}
 function repaint(){if(currentPage==='garage')drawHangar();else if(currentPage==='battle'&&game)renderBattle()}
 function rect(p,r){p.style.left=(r[0]*100)+'%';p.style.top=(r[1]*100)+'%';p.style.width=(r[2]*100)+'%';p.style.height=(r[3]*100)+'%'}
@@ -1595,7 +1585,7 @@ new ResizeObserver(()=>{if(currentPage==='garage'&&!panels.garage.viewport.hidde
 function botProfiles(){return {"recruit":{"label":"Recruta","hp":0.45,"damage":0.22,"armor":0.3,"pen":0.55,"speed":42,"range":380,"spread":0.65,"reload":9,"delay":5},"easy":{"label":"Fácil","hp":0.6,"damage":0.35,"armor":0.45,"pen":0.75,"speed":54,"range":520,"spread":0.4,"reload":7,"delay":3},"normal":{"label":"Normal","hp":0.78,"damage":0.65,"armor":0.7,"pen":1,"speed":70,"range":750,"spread":0.17,"reload":4.5,"delay":2},"hard":{"label":"Difícil","hp":1,"damage":0.85,"armor":0.9,"pen":1.1,"speed":80,"range":900,"spread":0.09,"reload":3,"delay":1},"elite":{"label":"Elite","hp":1.2,"damage":1,"armor":1,"pen":1.2,"speed":90,"range":1000,"spread":0.05,"reload":2.5,"delay":1}}}
 function makeBot(p,i,team,stats,tier,entry){const vehicle=entry?getTank(entry.tankId):null;if(vehicle){stats=vehicle.stats;tier=vehicle.tier}const profile=botProfiles()[team==="blue"?game.allyDifficulty:game.difficulty]||botProfiles().easy;const hp=Math.max(70,Math.round(stats.hp*profile.hp));return {x:p.x,y:p.y,team,profile,nickname:entry?.name,vehicleName:vehicle?.name,tier,angle:team==="blue"?-Math.PI/2:Math.PI/2,turretAngle:0,hp,maxHp:hp,armor:Math.max(5,Math.round(stats.armor*profile.armor)),damage:Math.max(4,Math.round(stats.damage*profile.damage)),pen:Math.round(stats.pen*profile.pen),class:vehicle?.class||["medium","light","heavy","td","medium"][i%5],alive:true,cooldown:profile.delay+i*.5}}
 function clearLine(a,b){let n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/24);for(let i=1;i<n;i++)if(isBlocked(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,1))return false;return true}
-function botDamage(u,s){if(s.pen>=u.armor){u.hp=Math.max(0,u.hp-Math.round(s.damage));addEffect(u.x,u.y,"#f1b46b","-"+Math.round(s.damage));if(!u.hp){u.alive=false;addEffect(u.x,u.y,"#f0ad68","DESTRUÍDO")}}}
+function botDamage(u,s){if(s.pen>=u.armor){const dealt=Math.min(u.hp,Math.round(s.damage));u.hp=Math.max(0,u.hp-dealt);addEffect(u.x,u.y,"#f1b46b","-"+dealt);if(!u.hp){u.alive=false;addEffect(u.x,u.y,"#f0ad68","DESTRUÍDO")}}else addEffect(u.x,u.y,"#d5d7c3","RICOCHETE")}
 function drawMinimap(){const c=$("wmkMinimap");if(!c||!game)return;const ctx=c.getContext("2d"),w=c.width,h=c.height,sc=Math.min(w/WORLD_W,h/WORLD_H),ox=(w-WORLD_W*sc)/2,oy=(h-WORLD_H*sc)/2;ctx.fillStyle="#101610";ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(ox,oy);ctx.scale(sc,sc);ctx.fillStyle="#59634d";ctx.fillRect(0,0,WORLD_W,WORLD_H);ctx.fillStyle="#343d30";for(const o of game.training?trainingObstacles:game.map?.obstacles||obstacles){if(o.kind==="building")ctx.fillRect(o.x,o.y,o.w,o.h);else{ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill()}}const dot=(u,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(u.x,u.y,Math.max(32,3/sc),0,7);ctx.fill()};for(const u of game.enemies)if(u.alive)dot(u,"#ff665b");for(const u of game.allies||[])if(u.alive)dot(u,"#58aaff");if(game.player.hp>0)dot(game.player,"#b9e9ff");const r=$("battleCanvas").getBoundingClientRect(),cam=cameraFor(r.width,r.height);ctx.strokeStyle="#e7e8c7";ctx.lineWidth=1/sc;ctx.strokeRect(cam.x-r.width/2/cam.scale,cam.y-r.height/2/cam.scale,r.width/cam.scale,r.height/cam.scale);ctx.restore()}
 (()=>{
 const bar=document.querySelector(".wmk-command"),b=document.createElement("button");b.textContent="BATALHAS COM BOTS";bar.append(b);const edit=document.createElement("button");edit.textContent="EDITOR DE MAPAS";bar.append(edit);const sound=document.createElement("button");sound.textContent="SOM: ON";bar.append(sound);sound.onclick=()=>{WMKAudio.enabled=!WMKAudio.enabled;sound.textContent="SOM: "+(WMKAudio.enabled?"ON":"OFF");WMKAudio.resume()};
@@ -1603,7 +1593,8 @@ document.addEventListener("pointerdown",()=>WMKAudio.resume(),{passive:true});
 const modal=document.createElement("dialog");modal.className="wmk-debug";modal.innerHTML='<form method="dialog"><header><strong>TREINO EM EQUIPE</strong><button value="close">×</button></header></form><p>Você integra a equipe azul. Bots aliados e inimigos. Sem recompensas.</p><label>Mapa <select id="wmkTeamMap"><option value="default">Vale WMK · 3600 × 2400</option><option value="large" selected>Planícies WMK · 6000 × 4000</option><option value="huge">Fronteira WMK · 8000 × 6000</option><option value="custom">Mapa do editor</option></select></label><label>Inimigos <select id="wmkDifficulty"><option value="recruit">Recruta</option><option value="easy" selected>Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><label>Aliados <select id="wmkAllyDifficulty"><option value="recruit">Recruta</option><option value="easy">Fácil</option><option value="normal" selected>Normal</option><option value="hard">Difícil</option><option value="elite">Elite</option></select></label><p>Recruta e Fácil: inimigos menos resistentes, lentos e imprecisos. Aliados podem ter nível diferente.</p><div class="dbg-actions"><button id="wmk3">3 × 3</button><button id="wmk5">5 × 5</button><button id="wmk10">10 × 10</button><button id="wmk15">15 × 15</button></div>';document.body.append(modal);
 const queue=document.createElement("dialog");queue.className="wmk-debug wmk-match-queue";queue.innerHTML='<header><strong>WMK MATCHMAKER · FILA LOCAL SIMULADA</strong></header><p id="mmStatus"></p><progress id="mmProgress" max="100" value="0"></progress><div id="mmRoster"></div><div class="dbg-actions"><button id="mmCancel">Cancelar</button><button id="mmEnter" disabled>Entrar na batalha</button></div>';document.body.append(queue);
 let ticket=0,timer=null,pending=null;const cancel=()=>{ticket++;clearInterval(timer);pending=null;if(queue.open)queue.close();pressedKeys={}};$("mmCancel").onclick=cancel;queue.addEventListener("cancel",cancel);
-function roster(match){const root=$("mmRoster");root.replaceChildren();const heading=document.createElement("p");heading.textContent="Soma de tiers: "+match.blueScore+" × "+match.redScore+" · diferença "+match.tierDelta;root.append(heading);const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA";col.append(title);for(const entry of match[team]){const row=document.createElement("div");row.className="wmk-roster-row";row.textContent=entry.name+" · "+getTank(entry.tankId).name+" · "+ROMAN[entry.tier]+(entry.bot?" [BOT]":" [JOGADOR]");col.append(row)}cols.append(col)}root.append(cols)}
+function rosterCard(entry,hp,maxHp){const tank=getTank(entry.tankId),row=document.createElement("div");row.className="wmk-roster-row wmk-roster-card"+(hp<=0?" eliminated":"")+(!entry.bot?" self":"");const image=document.createElement("span");image.className="wmk-roster-thumb";image.innerHTML=tankThumb(tank);const info=document.createElement("div");info.className="wmk-roster-info";const name=document.createElement("strong");name.textContent=entry.name;const meta=document.createElement("small");meta.textContent=CLASS_ICONS[tank.class]+" "+ROMAN[tank.tier]+" · "+tank.name+" · "+CLASS_LABELS[tank.class];const hpText=document.createElement("small");hpText.className="wmk-roster-hp";hpText.textContent=hp<=0?"DESTRUÍDO":Math.ceil(hp)+" / "+Math.ceil(maxHp)+" HP";const track=document.createElement("div");track.className="wmk-roster-track";const fill=document.createElement("i");fill.style.width=Math.max(0,Math.min(100,hp/maxHp*100))+"%";track.append(fill);info.append(name,meta,track,hpText);const role=document.createElement("span");role.className="wmk-roster-role";role.textContent=entry.bot?"BOT":"VOCÊ";row.append(image,info,role);return row}
+function roster(match){const root=$("mmRoster");root.replaceChildren();const heading=document.createElement("p");heading.textContent="Soma de tiers: "+match.blueScore+" × "+match.redScore+" · diferença "+match.tierDelta;root.append(heading);const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=(team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA")+" · "+match[team].length+" VEÍCULOS";col.append(title);for(const entry of match[team]){const t=getTank(entry.tankId),profile=botProfiles()[team==="blue"?$("wmkAllyDifficulty").value:$("wmkDifficulty").value];const hp=entry.bot?Math.max(70,Math.round(t.stats.hp*profile.hp)):effectiveStats(t).hp;col.append(rosterCard(entry,hp,hp))}cols.append(col)}root.append(cols)}
 b.onclick=()=>{pressedKeys={};modal.showModal()};
 const launch=n=>{const tank=getTank(state.selectedTank);if(!tank||!isOwned(tank.id))return notify("Selecione um blindado da garagem.");let map=$("wmkTeamMap").value==="custom"?WMKMaps.load():WMKMaps.presets[$("wmkTeamMap").value];if(!map)return notify("Salve um mapa no editor primeiro.");try{map=WMKMaps.expand(map,n)}catch(e){return notify(e.message)}if(game?.active&&!confirm("Encerrar sessão atual?"))return;const match=WMKMatchmaker.create(TANKS,tank,n);if(!WMKMatchmaker.audit(match))return notify("Falha no balanceamento.");modal.close();pending={teamSize:n,map,match,difficulty:$("wmkDifficulty").value,allyDifficulty:$("wmkAllyDifficulty").value};const id=++ticket;let step=0;$("mmRoster").replaceChildren();$("mmEnter").disabled=true;$("mmProgress").value=0;$("mmStatus").textContent="Buscando oponentes simulados… 0 / "+(n*2);queue.showModal();timer=setInterval(()=>{if(id!==ticket)return;step++;$("mmProgress").value=Math.min(100,step*25);$("mmStatus").textContent=step<4?"Reunindo participantes simulados… "+Math.floor(n*2*step/4)+" / "+n*2:"Partida encontrada · "+map.name+" · "+n+" × "+n;if(step>=4){clearInterval(timer);roster(match);$("mmEnter").disabled=false}},650)};
 $("mmEnter").onclick=()=>{if(!pending)return;const config=pending;cancel();startBattle(config)};
@@ -1611,9 +1602,15 @@ for(const n of [3,5,10,15])$("wmk"+n).onclick=()=>launch(n);
 
 const rosterButton=document.createElement("button");rosterButton.textContent="EQUIPES (TAB)";bar.append(rosterButton);
 const scoreboard=document.createElement("dialog");scoreboard.className="wmk-debug wmk-match-queue";scoreboard.innerHTML='<form method="dialog"><header><strong>ESCALAÇÃO DA PARTIDA</strong><button value="close">×</button></header></form><div id="mmLive"></div>';document.body.append(scoreboard);
-function live(){if(!game?.match)return notify("Entre em uma partida com bots.");const root=$("mmLive");root.replaceChildren();const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA";col.append(title);game.match[team].forEach((entry,i)=>{const u=team==="blue"?(i===0?game.player:game.allies[i-1]):game.enemies[i];const row=document.createElement("div");row.className="wmk-roster-row"+(u?.hp>0?"":" eliminated");row.textContent=entry.name+" · "+getTank(entry.tankId).name+" · "+ROMAN[entry.tier]+" · "+(u?.hp>0?Math.ceil(u.hp)+" HP":"DESTRUÍDO");col.append(row)});cols.append(col)}root.append(cols);pressedKeys={};scoreboard.showModal()}
+function live(){if(!game?.match)return notify("Entre em uma partida com bots.");const root=$("mmLive");root.replaceChildren();const cols=document.createElement("div");cols.className="wmk-rosters";for(const team of ["blue","red"]){const col=document.createElement("div");col.className=team;const title=document.createElement("h3");title.textContent=team==="blue"?"EQUIPE AZUL":"EQUIPE VERMELHA";col.append(title);game.match[team].forEach((entry,i)=>{const u=team==="blue"?(i===0?game.player:game.allies[i-1]):game.enemies[i];col.append(rosterCard(entry,u?.hp||0,u?.maxHp||1))});cols.append(col)}root.append(cols);pressedKeys={};scoreboard.showModal()}
 rosterButton.onclick=live;window.addEventListener("keydown",e=>{if(e.key==="Tab"&&currentPage==="battle"&&game?.match&&!modal.open&&!queue.open&&!scoreboard.open&&!document.querySelector("dialog[open]")){e.preventDefault();live()}});
 edit.onclick=()=>window.open("editor-mapas.html","_blank","noopener");
 $("battleCanvas").addEventListener("wheel",e=>{if(!game||game.mode!=="arcade")return;e.preventDefault();game.zoom=Math.max(.45,Math.min(1.35,game.zoom*(e.deltaY>0?.9:1.1)))},{passive:false});
 const tick=updateGame;updateGame=function(dt){if(modal.open||queue.open||scoreboard.open)return;tick(dt)};const shot=firePlayer;firePlayer=function(){if(!modal.open&&!queue.open&&!scoreboard.open)shot()};
 })();
+
+function spawnVisual(x,y,color,label,kind){if(!game)return;const life=kind==="muzzle"?.24:kind==="explosion"?1.5:1.1;const count=kind==="explosion"?20:kind==="muzzle"?7:10;const particles=Array.from({length:count},(_,i)=>({a:Math.random()*Math.PI*2,v:20+Math.random()*(kind==="explosion"?160:80),smoke:i%3===0}));if(game.effects.length>=120)game.effects.shift();game.effects.push({x,y,color,label,kind,life,maxLife:life,particles})}
+function drawVehicleMarkers(ctx,w,h,cam){if(!game)return;const list=[...game.enemies,...(game.allies||[]),game.player];ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";for(const u of list){if(u.hp<=0||u.alive===false)continue;const x=w/2+(u.x-cam.x)*cam.scale,y=h/2+(u.y-cam.y)*cam.scale- Math.max(44, tankSize(u.class||game.tank.class).length*1.42*cam.scale);if(x<-100||x>w+100||y<-60||y>h+100)continue;const color=u.team==="blue"?"#70c1ff":"#ff877b",name=u.nickname||(game.training?"ALVO DE TREINO":"BOT"),vehicle=u.vehicleName||CLASS_LABELS[u.class]||"Blindado",tier=u.tier?ROMAN[u.tier]:"";const ratio=Math.max(0,Math.min(1,u.hp/u.maxHp));ctx.font="bold 11px Segoe UI";const label=name+" · "+tier+" "+vehicle;const bw=Math.max(100,Math.min(210,ctx.measureText(label).width+16));ctx.fillStyle="#101712dd";ctx.fillRect(x-bw/2,y-22,bw,34);ctx.fillStyle=color;ctx.fillText(label,x,y-14,bw-6);ctx.fillStyle="#29352b";ctx.fillRect(x-bw/2+4,y-5,bw-8,13);ctx.fillStyle=ratio<.25?"#dfaa45":color;ctx.fillRect(x-bw/2+4,y-5,(bw-8)*ratio,13);ctx.fillStyle="#fff";ctx.font="bold 10px Segoe UI";ctx.strokeStyle="#101610";ctx.lineWidth=2;const hp=Math.ceil(u.hp)+"/"+Math.ceil(u.maxHp);ctx.strokeText(hp,x,y+1);ctx.fillText(hp,x,y+1)}ctx.restore()}
+function drawFloatingDamage(ctx,w,h,cam){ctx.save();ctx.textAlign="center";ctx.font="bold 21px Segoe UI";for(const e of game.effects){if(!e.label)continue;const t=1-e.life/e.maxLife,x=w/2+(e.x-cam.x)*cam.scale,y=h/2+(e.y-cam.y)*cam.scale-30-t*75;ctx.globalAlpha=Math.min(1,e.life*3);ctx.lineWidth=4;ctx.strokeStyle="#101611";ctx.fillStyle=e.color;ctx.strokeText(e.label,x,y);ctx.fillText(e.label,x,y)}ctx.restore()}
+function updateTeamStrip(){const el=document.getElementById("wmkTeamStrip");if(!el||!game)return;const blue=[game.player,...(game.allies||[])],red=game.enemies;const key=blue.map(u=>Math.ceil(u.hp)).join(",")+"|"+red.map(u=>Math.ceil(u.hp)).join(",");if(el._game===game&&el._key===key)return;el._game=game;el._key=key;el.replaceChildren();for(const [team,list] of [["blue",blue],["red",red]]){const group=document.createElement("div");group.className="wmk-strip-team "+team;const title=document.createElement("strong");title.textContent=(team==="blue"?"AZUL ":"VERMELHO ")+list.filter(u=>u.hp>0).length+"/"+list.length;group.append(title);for(const u of list){const chip=document.createElement("span");chip.className="wmk-unit-chip"+(u.hp<=0?" dead":"");chip.title=(u.nickname||"BOT")+" · "+(u.vehicleName||CLASS_LABELS[u.class])+" · "+Math.ceil(u.hp)+"/"+u.maxHp+" HP";chip.textContent=CLASS_ICONS[u.class||game.tank.class]||"◆";const hp=document.createElement("i");hp.style.width=Math.max(0,u.hp/u.maxHp*100)+"%";chip.append(hp);group.append(chip)}el.append(group)}}
+(()=>{const panel=document.querySelector(".battle-shell .wmk-window[data-id=objective] .wmk-content");if(panel){const el=document.createElement("div");el.id="wmkTeamStrip";panel.append(el)} })();

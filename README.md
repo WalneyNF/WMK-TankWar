@@ -1,3 +1,5 @@
+![WMK TankWar — logo oficial](assets/logo.webp)
+
 # 🛡️ WMK TankWar
 
 ![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-green)

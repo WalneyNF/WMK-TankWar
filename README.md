@@ -123,3 +123,8 @@ Alpha 0.2: modelo procedural original com rodas, lagartas, escotilhas, grelhas, 
 ## Alpha 0.4 — Mira projetada
 
 Mouse capturado com alvo virtual, torre e canhão interpolados, retículo grande na trajetória real do disparo e rotação suave do casco A/D. Spring arm traseiro mantido, com enquadramento para frente. Consulte o roadmap para o conceito visual aprovado. Testes isolados passaram; WebGL e Pointer Lock reais ainda precisam de validação.
+
+
+## Alpha 0.4.25 — Artilharia e árvore experimental
+
+Laboratório 3D com 24 veículos em seis classes. AAP clássica e lançadoras possuem modelos, efeitos, câmeras e balanceamento distintos. A árvore principal oferece quatro lançadoras experimentais com acesso direto ao laboratório, sem compra ou progressão. Batalhas convencionais permanecem inalteradas. [Manual completo do laboratório](manuais/laboratorio.html).

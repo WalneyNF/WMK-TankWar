@@ -276,6 +276,7 @@
       return !tank.prev || isOwned(tank.prev);
     }
 
+    function renderRocketLabTree(){const rows=[{"id":"r1","name":"Tempestade","tier":1,"hp":410,"damage":85,"reload":12,"salvo":4},{"id":"r2","name":"Furacão","tier":2,"hp":510,"damage":65,"reload":14,"salvo":6},{"id":"r3","name":"Vulcão","tier":3,"hp":650,"damage":80,"reload":16,"salvo":6},{"id":"r4","name":"Martelo de Ferro","tier":4,"hp":820,"damage":75,"reload":18,"salvo":8}];return '<div class="tree-row"><div class="tree-line-label">✦ Lançadoras<small>Laboratório 3D · experimental</small></div>'+rows.map(v=>'<article class="tree-node"><div class="node-top">TIER '+ROMAN[v.tier]+'</div><div style="padding:10px"><svg viewBox="0 0 100 50" width="100%" aria-hidden="true"><rect x="8" y="27" width="84" height="8" fill="#707e6d"/><rect x="70" y="14" width="22" height="16" fill="#839384"/><rect x="12" y="12" width="53" height="14" rx="2" fill="#758974"/><path d="M15 16H65M15 21H65" stroke="#263b35" stroke-width="2"/><circle cx="22" cy="36" r="7" fill="#242b28"/><circle cx="43" cy="36" r="7" fill="#242b28"/><circle cx="80" cy="36" r="7" fill="#242b28"/></svg><strong>'+v.name+'</strong></div><div class="node-stats">'+v.hp+' HP · '+v.salvo+' por salva · '+v.reload+' s</div><div class="node-status">Disponível para testes, sem compra</div><a class="node-action" style="display:block;text-align:center;text-decoration:none" href="tankwar3d.html?lab=1&tank='+v.id+'">TESTAR EM 3D</a></article>').join('')+'</div>'}
     function renderTree() {
       const filter = $("treeFilter").value;
       const order = ["light", "medium", "heavy", "td", "spg"];
@@ -324,7 +325,7 @@
             }).join("")}
           </div>
         `;
-      }).join("");
+      }).join("") + ((filter==="all"||filter==="rocket") ? renderRocketLabTree() : "");
     }
 
     function renderAll() {
